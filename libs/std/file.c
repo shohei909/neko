@@ -22,6 +22,8 @@
 #include <neko.h>
 #include <stdio.h>
 #ifdef NEKO_WINDOWS
+#	include <io.h>
+#	include <fcntl.h>
 #	include <windows.h>
 #endif
 
@@ -286,6 +288,24 @@ static value file_contents( value name ) {
 	return s;
 }
 
+/**
+	file_set_mode : 'file -> binary:bool -> bool
+	<doc>setmode</doc>
+**/
+static value file_set_mode( value file, value binary ) {
+#ifdef NEKO_WINDOWS
+	fio *f;
+	int result;
+	val_check_kind(file,k_file);
+	val_check(binary,bool);
+	f = val_file(file);
+	result = _setmode( _fileno(f->io), _O_BINARY );
+	if( result == -1 )
+		file_error("file_set_mode",f);
+#endif
+	return val_null;
+}
+
 #define MAKE_STDIO(k) \
 	static value file_##k() { \
 		fio *f; \
@@ -324,5 +344,6 @@ DEFINE_PRIM(file_tell,1);
 DEFINE_PRIM(file_eof,1);
 DEFINE_PRIM(file_flush,1);
 DEFINE_PRIM(file_contents,1);
+DEFINE_PRIM(file_set_mode,2);
 
 /* ************************************************************************ */
